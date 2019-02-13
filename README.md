@@ -21,9 +21,9 @@
 
 ## Getting Started
 
-These instructions will get you a copy of this project up and running on your local machine. Please make sure your __JAVA_HOME__ environment variable is set to a valid JDK installation (JRE will not work). 
+These instructions will get you a copy of this project up and running on your local machine. Please make sure your __JAVA_HOME__ environment variable is set to a valid JDK installation (JRE will not work).
 
-`unzip intraday-tracker.zip`  
+`git clone https://github.com/peter-sattler/intraday-tracker`  
 `cd intraday-tracker`  
 `gradlew run`
 
