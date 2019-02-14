@@ -23,14 +23,13 @@ repositories {
 }
 
 dependencies {
-    compile("org.slf4j:slf4j-api:${slf4jVersion}")
-    compile("org.slf4j:slf4j-simple:${slf4jVersion}")
+    implementation("org.slf4j:slf4j-api:${slf4jVersion}")
 
-    testCompile("org.slf4j:slf4j-api:${slf4jVersion}")
-    testCompile("org.slf4j:slf4j-simple:${slf4jVersion}")
-    testCompile('junit:junit:4.12')
+    testImplementation('junit:junit:4.12')
+    testImplementation("org.slf4j:slf4j-api:${slf4jVersion}")
+    testImplementation("org.slf4j:slf4j-simple:${slf4jVersion}")
 }
 
-run{
+run {
     standardInput = System.in
 }
