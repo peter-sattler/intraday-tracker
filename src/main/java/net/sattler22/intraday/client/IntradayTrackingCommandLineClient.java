@@ -55,9 +55,8 @@ public final class IntradayTrackingCommandLineClient {
     public static void main(String[] args) {
         final IntradayTrackingService service = new IntradayTrackingServiceInMemoryImpl();
         final IntradayTrackingCommandLineClient client = new IntradayTrackingCommandLineClient(service);
-        final Scanner scanner = new Scanner(System.in);
-        System.out.println("Intraday Tracking Command-Line Client");
-        try {
+        System.out.println("Intraday Tracker Command-Line Client");
+        try(final Scanner scanner = new Scanner(System.in)) {
             while (true) {
                 // Get user input:
                 System.out.println();
@@ -87,13 +86,10 @@ public final class IntradayTrackingCommandLineClient {
                             security.getLowPrice(), security.calcAveragePrice(HALF_UP));
             }
             System.out.println();
-            System.out.println("Intraday Tracking Command-Line Client terminated");
+            System.out.println("Intraday Tracker Command-Line Client terminated");
         }
         catch (RuntimeException e) {
             e.printStackTrace(System.err);
-        }
-        finally {
-            scanner.close();
         }
     }
 }
