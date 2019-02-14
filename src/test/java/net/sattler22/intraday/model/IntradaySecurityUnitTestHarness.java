@@ -81,7 +81,7 @@ public class IntradaySecurityUnitTestHarness {
     /**
      * Test standard assertions
      */
-    private void assertImpl(Security actual, String symbol, BigDecimal lowPrice, BigDecimal highPrice, BigDecimal avgPrice) {
+    private static void assertImpl(Security actual, String symbol, BigDecimal lowPrice, BigDecimal highPrice, BigDecimal avgPrice) {
         assertEquals(symbol, actual.getSymbol());
         assertEquals(lowPrice, actual.getLowPrice());
         assertEquals(highPrice, actual.getHighPrice());
