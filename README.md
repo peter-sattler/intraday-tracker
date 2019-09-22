@@ -1,6 +1,6 @@
-# Aliya Financial Coding Challenge 2019
+# Intraday Stock Tracker
 
-## My Design Decisions:
+## Design Decisions:
 
 * At a high-level, the _intraday-tracker_ project is broken down into the following components:
     * Tracking service interface
@@ -28,24 +28,14 @@ These instructions will get you a copy of this project up and running on your lo
 `gradlew run`
 
 
-## Given Requirements:
-
-Hello!
-
-Thanks for your interest in Aliya. We are excited to find out more about how you approach software development. We find that the quickest way to understand how someone builds software is to look at a concrete example. To that end we'd like you to work on a short programming assignment for us. It shouldn't take more than an hour or two of your time, and will allow us to have a much more focused interview process further down the line.
-
-At Aliya we mostly work in Java and Javascript, but feel free to implement your solution in whichever tech stack you'd prefer. Please do NOT post your submission online - you can just send us a zip or tarball.
-
-### Assessment Criteria
-
-We will be assessing your submission based on the following criteria:
+## Assessment Criteria
 
 * __Correct__ - Does your program work correct and meet the specification?
 * __Understandable__ - We spend much more time reading code than writing it. Is your submission easy for us to understand? Are assumptions and design decisions documented?
 * __Maintainable__ - Does your program lend itself to future enhancement. Does it have test coverage to protect against regressions.
 * __Pragmatic__ - We don't spend time on features that aren't needed today. Over-engineering and "gold-plating" are red flags for us.
 
-### The Problem
+## The Problem
 
 You will be building a command-line tool which tracks intraday data for an arbitrary set of securities. The tool receives security price updates in a specific format via STDIN. Every time a new line of input is received the tool will output updated intraday data, in the form of High, Low and Average. High and Low are the highest and lowest values seen for a given security, and Average is the mean of all prices seen so far for a given security.
 
