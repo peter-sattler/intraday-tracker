@@ -25,7 +25,8 @@ These instructions will get you a copy of this project up and running on your lo
 
 `git clone https://github.com/peter-sattler/intraday-tracker`  
 `cd intraday-tracker`  
-`gradlew run`
+`./mvnw test`  
+`./mvnw exec:java`
 
 
 ## Assessment Criteria
