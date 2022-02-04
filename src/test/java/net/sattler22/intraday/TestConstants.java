@@ -1,6 +1,7 @@
 package net.sattler22.intraday;
 
 import java.math.RoundingMode;
+import java.time.LocalDate;
 
 /**
  * Test Symbols and Constants
@@ -26,7 +27,12 @@ public final class TestConstants {
     public static final String GOOGLE = "GOOG";
 
     /**
-     * Default rounding mode
+     * Rounding mode
      */
     public static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+
+    /**
+     * Trade date
+     */
+    public static final LocalDate TRADE_DATE = LocalDate.now();
 }

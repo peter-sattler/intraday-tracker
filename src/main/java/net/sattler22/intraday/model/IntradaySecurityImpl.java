@@ -2,7 +2,6 @@ package net.sattler22.intraday.model;
 
 import static java.math.RoundingMode.HALF_UP;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -10,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import net.jcip.annotations.ThreadSafe;
 import net.sattler22.intraday.service.IntradayTrackingService.Security;
 
 /**
@@ -17,11 +17,10 @@ import net.sattler22.intraday.service.IntradayTrackingService.Security;
  *
  * @author Pete Sattler
  * @version February 12, 2019
- * @implSpec This class is thread-safe
  */
-public final class IntradaySecurityImpl implements Security, Serializable {
+@ThreadSafe
+public final class IntradaySecurityImpl implements Security {
 
-    private static final long serialVersionUID = 1285388763299592156L;
     private final LocalDate tradeDate;
     private final String symbol;
     private volatile BigDecimal lowPrice;
@@ -49,29 +48,29 @@ public final class IntradaySecurityImpl implements Security, Serializable {
     }
 
     @Override
-    public LocalDate getTradeDate() {
+    public LocalDate tradeDate() {
         return tradeDate;
     }
 
     @Override
-    public String getSymbol() {
+    public String symbol() {
         return symbol;
     }
 
     @Override
-    public BigDecimal getLowPrice() {
+    public BigDecimal lowPrice() {
         return lowPrice;
     }
 
     @Override
-    public BigDecimal getHighPrice() {
+    public BigDecimal highPrice() {
         return highPrice;
     }
 
     @Override
     public BigDecimal calcAveragePrice(RoundingMode roundingMode) {
         if (roundingMode == null)
-            roundingMode = HALF_UP;  // Per interface contract
+            roundingMode = HALF_UP;  //Per interface contract
         synchronized (lockObject) {
             return priceSum.divide(new BigDecimal(prices.size()), roundingMode);
         }
@@ -103,13 +102,13 @@ public final class IntradaySecurityImpl implements Security, Serializable {
             return false;
         if (this.getClass() != other.getClass())
             return false;
-        final Security that = (Security) other;
-        return Objects.equals(this.tradeDate, that.getTradeDate()) && Objects.equals(this.symbol, that.getSymbol());
+        final var that = (Security) other;
+        return Objects.equals(this.tradeDate, that.tradeDate()) && Objects.equals(this.symbol, that.symbol());
     }
 
     @Override
     public String toString() {
-        return String.format("IntradaySecurityImpl [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceSum=%s, prices=%s]",
-                tradeDate, symbol, lowPrice, highPrice, priceSum, prices);
+        return String.format("%s [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceSum=%s, prices=%s]",
+                              getClass().getSimpleName(), tradeDate, symbol, lowPrice, highPrice, priceSum, prices);
     }
 }

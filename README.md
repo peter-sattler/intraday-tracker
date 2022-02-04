@@ -1,4 +1,5 @@
 # Intraday Stock Tracker
+<img src="/images/intraday-stock-tracker.png" alt="Funny Stock Chart" width="60%" height="60%">
 
 ## Design Decisions:
 
@@ -25,8 +26,7 @@ These instructions will get you a copy of this project up and running on your lo
 
 `git clone https://github.com/peter-sattler/intraday-tracker`  
 `cd intraday-tracker`  
-`./mvnw test`  
-`./mvnw exec:java`
+`./mvnw compile exec:java`
 
 
 ## Assessment Criteria

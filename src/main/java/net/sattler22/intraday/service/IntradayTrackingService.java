@@ -11,35 +11,35 @@ import java.util.Collection;
  * @author Pete Sattler
  * @version February 12, 2019
  */
-public interface IntradayTrackingService {
+public sealed interface IntradayTrackingService permits IntradayTrackingServiceInMemoryImpl {
 
     /**
      * Get an intraday security
      *
      * @param symbol The security's symbol (case insensitive)
-     * @throws NullPointerException When the symbol is NULL
+     * @throws NullPointerException When the symbol is <code>NULL</code>
      * @throws IllegalArgumentException When the symbol can not be found
      */
-    Security getSecurity(String symbol);
+    Security security(String symbol);
 
     /**
      * Get all intraday securities
      *
      * @return A collection of all intraday securities
      */
-    Collection<Security> getSecurities();
+    Collection<Security> securities();
 
     /**
-     * Record an intraday security price
+     * Book an intraday security
      *
      * @param tradeDate The date the security was traded
      * @param symbol The security's symbol (case insensitive)
      * @param price The current price
-     * @throws NullPointerException When the trade date is NULL
-     * @throws NullPointerException When the symbol is NULL
-     * @throws NullPointerException When the price is NULL
+     * @throws NullPointerException When the trade date is <code>NULL</code>
+     * @throws NullPointerException When the symbol is <code>NULL</code>
+     * @throws NullPointerException When the price is <code>NULL</code>
      */
-    void record(LocalDate tradeDate, String symbol, BigDecimal price);
+    void book(LocalDate tradeDate, String symbol, BigDecimal price);
 
     /**
      * Intraday Security Interface
@@ -47,41 +47,49 @@ public interface IntradayTrackingService {
     interface Security {
 
         /**
-         * Get the date the security was traded on
+         * Get trade date
+         *
+         * @return The date the security was traded on
          */
-        LocalDate getTradeDate();
+        LocalDate tradeDate();
 
         /**
-         * Get the security's (upper cased) symbol
+         * Get symbol
+         *
+         * @return The security's symbol in upper case
          */
-        String getSymbol();
+        String symbol();
 
         /**
-         * Get the low price of the day
+         * Get low price
+         *
+         * @return The low price of the day
          */
-        BigDecimal getLowPrice();
+        BigDecimal lowPrice();
 
         /**
-         * Get the high price of the day
+         * Get high price
+         *
+         * @return The high price of the day
          */
-        BigDecimal getHighPrice();
+        BigDecimal highPrice();
 
         /**
-         * Calculates the average price of the day
+         * Calculate average price
          *
          * @param roundingMode Indicates how the least significant digit is to be calculated. If
-         *        NULL, then <code>RoundingMode.HALF_UP</code> will be used.
+         *                     <code>NULL</code>, then <code>RoundingMode.HALF_UP</code> will be used.
          */
         BigDecimal calcAveragePrice(RoundingMode roundingMode);
 
         /**
-         * Updates the security with a new price
+         * Update price
          *
          * @param tradeDate The date the security was traded
          * @param price The current price
          * @return True if the update was successful. Otherwise, returns false.
-         * @throws NullPointerException When the trade date is NULL
-         * @throws NullPointerException When the price is NULL
+         * @throws NullPointerException When the trade date is <code>NULL</code>
+         * @throws NullPointerException When the price is <code>NULL</code>
          */
         boolean update(LocalDate tradeDate, BigDecimal price);
     }
