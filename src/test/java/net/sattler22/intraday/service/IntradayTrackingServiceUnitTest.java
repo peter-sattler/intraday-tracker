@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,60 +29,56 @@ final class IntradayTrackingServiceUnitTest {
     }
 
     @Test
-    void testGetSymbolFailsNullSymbol() {
+    void testGetSecurityFailsWhenSymbolIsNull() {
         assertThrows(NullPointerException.class, () -> {
             intradayTrackingService.security(null);
         });
     }
 
     @Test
-    void testGetSymbolFailsSymbolNotFound() {
+    void testGetSecurityFailsWhenSymbolIsNotFound() {
         assertThrows(IllegalArgumentException.class, () -> {
-            intradayTrackingService.security(APPLE);
+            intradayTrackingService.security(GOOGLE);  //They are searching for answers ;)
         });
     }
 
     @Test
-    void testRecordFailsNullSymbol() {
+    void testBookTradeFailsWhenSymbolIsNull() {
         assertThrows(NullPointerException.class, () -> {
-            final var price = BigDecimal.ONE;
-            intradayTrackingService.book(TRADE_DATE, null, price);
+            intradayTrackingService.book(TRADE_DATE, null, BigDecimal.ONE);
         });
     }
 
     @Test
-    void testRecordAndGetSymbolHappyPath() {
-        final var tradeDate = LocalDate.now();
+    void testBookTradeAndGetSymbolHappyPath() {
         final var symbol = APPLE;
         final var price = new BigDecimal("178.44");
-        final var expected = new IntradaySecurityImpl(tradeDate, symbol, price);
-        intradayTrackingService.book(tradeDate, symbol, price);
+        final var expected = new IntradaySecurityImpl(TRADE_DATE, symbol, price);
+        intradayTrackingService.book(TRADE_DATE, symbol, price);
         final var actual = intradayTrackingService.security(APPLE);
         assertEquals(expected, actual);
     }
 
     @Test
-    void testRecordAndGetSecuritiesHappyPath1() {
+    void testBookTradeAndGetSecuritiesHappyPath1() {
         final var expectedSize = 1;
-        intradayTrackingService.book(LocalDate.now(), APPLE, new BigDecimal("178.44"));
+        intradayTrackingService.book(TRADE_DATE, APPLE, new BigDecimal("178.44"));
         assertEquals(expectedSize, intradayTrackingService.securities().size());
     }
 
     @Test
-    void testRecordAndGetSecuritiesHappyPath2() {
-        final var tradeDate = LocalDate.now();
+    void testBookTradeAndGetSecuritiesHappyPath2() {
         final var expectedSize = 1;
-        intradayTrackingService.book(tradeDate, APPLE, new BigDecimal("178.44"));
-        intradayTrackingService.book(tradeDate, APPLE, new BigDecimal("163.84"));
+        intradayTrackingService.book(TRADE_DATE, APPLE, new BigDecimal("178.44"));
+        intradayTrackingService.book(TRADE_DATE, APPLE, new BigDecimal("163.84"));
         assertEquals(expectedSize, intradayTrackingService.securities().size());
     }
 
     @Test
-    void testRecordAndGetSecuritiesMapHappyPath3() {
-        final var tradeDate = LocalDate.now();
+    void testBookTradeAndGetSecuritiesMapHappyPath3() {
         final var expectedSize = 2;
-        intradayTrackingService.book(tradeDate, APPLE, new BigDecimal("178.44"));
-        intradayTrackingService.book(tradeDate.minusDays(1L), GOOGLE, new BigDecimal("1149.49"));
+        intradayTrackingService.book(TRADE_DATE, APPLE, new BigDecimal("178.44"));
+        intradayTrackingService.book(TRADE_DATE.minusDays(1L), GOOGLE, new BigDecimal("1149.49"));
         assertEquals(expectedSize, intradayTrackingService.securities().size());
     }
 }

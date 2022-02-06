@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,28 +23,28 @@ import net.sattler22.intraday.service.IntradayTrackingService.Security;
 final class IntradaySecurityUnitTest {
 
     @Test
-    void testConstructorFailsNullTradeDate() {
+    void testConstructorFailsWhenTradeDateIsNull() {
         assertThrows(NullPointerException.class, () -> {
             new IntradaySecurityImpl(null, APPLE, BigDecimal.ONE);
         });
     }
 
     @Test
-    void testConstructorFailsNullSymbol() {
+    void testConstructorFailsWhenSymbolIsNull() {
         assertThrows(NullPointerException.class, () -> {
             new IntradaySecurityImpl(TRADE_DATE, null, BigDecimal.ONE);
         });
     }
 
     @Test
-    void testConstructorFailsNullPrice() {
+    void testConstructorFailsWhenPriceIsNull() {
         assertThrows(NullPointerException.class, () -> {
             new IntradaySecurityImpl(TRADE_DATE, APPLE, null);
         });
     }
 
     @Test
-    void testConstructorInvalidPrice() {
+    void testConstructorFailsWhenPriceIsInvalid() {
         assertThrows(IllegalArgumentException.class, () -> {
             new IntradaySecurityImpl(TRADE_DATE, GOOGLE, BigDecimal.ZERO);
         });
@@ -53,38 +52,35 @@ final class IntradaySecurityUnitTest {
 
     @Test
     void testConstructorHappyPath() {
-        final var tradeDate = LocalDate.now();
         final var expectedSymbol = APPLE;
         final var expectedPrice = new BigDecimal("178.44");
-        final var intradaySecurity = new IntradaySecurityImpl(tradeDate, expectedSymbol, expectedPrice);
+        final var intradaySecurity = new IntradaySecurityImpl(TRADE_DATE, expectedSymbol, expectedPrice);
         assertImpl(intradaySecurity, expectedSymbol, expectedPrice, expectedPrice, expectedPrice);
     }
 
     @Test
     void testUpdateOnePriceHappyPath() {
-        final var tradeDate = LocalDate.now();
         final var expectedSymbol = FACEBOOK;
         final var nbrPrices = new BigDecimal("2");
         final var lowPrice = new BigDecimal("184.19");
         final var highPrice = new BigDecimal("196.50");
         final var expectedAverage = lowPrice.add(highPrice).divide(nbrPrices, ROUNDING_MODE);
-        final var intradaySecurity = new IntradaySecurityImpl(tradeDate, expectedSymbol, lowPrice);
-        intradaySecurity.update(tradeDate, highPrice);
+        final var intradaySecurity = new IntradaySecurityImpl(TRADE_DATE, expectedSymbol, lowPrice);
+        intradaySecurity.update(TRADE_DATE, highPrice);
         assertImpl(intradaySecurity, expectedSymbol, lowPrice, highPrice, expectedAverage);
     }
 
     @Test
     void testUpdateTwoPricesHappyPath() {
-        final var tradeDate = LocalDate.now();
         final var expectedSymbol = FACEBOOK;
         final var nbrPrices = new BigDecimal("3");
         final var initialPrice = new BigDecimal("184.19");
         final var highPrice = new BigDecimal("196.50");
         final var lowPrice = new BigDecimal("178.25");
         final var expectedAverage = (initialPrice.add(lowPrice).add(highPrice)).divide(nbrPrices, ROUNDING_MODE);
-        final var intradaySecurity = new IntradaySecurityImpl(tradeDate, expectedSymbol, initialPrice);
-        intradaySecurity.update(tradeDate, highPrice);
-        intradaySecurity.update(tradeDate, lowPrice);
+        final var intradaySecurity = new IntradaySecurityImpl(TRADE_DATE, expectedSymbol, initialPrice);
+        intradaySecurity.update(TRADE_DATE, highPrice);
+        intradaySecurity.update(TRADE_DATE, lowPrice);
         assertImpl(intradaySecurity, expectedSymbol, lowPrice, highPrice, expectedAverage);
     }
 
