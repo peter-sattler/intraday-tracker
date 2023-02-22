@@ -24,10 +24,18 @@
 
 These instructions will get you a copy of this project up and running on your local machine. Please make sure your __JAVA_HOME__ environment variable is set to a valid JDK installation (JRE will not work).
 
-`git clone https://github.com/peter-sattler/intraday-tracker`  
-`cd intraday-tracker`  
-`./mvnw compile exec:java`
-
+1. Clone this Git repository:
+```text
+git clone https://github.com/peter-sattler/intraday-tracker
+```
+2. Switch to the application directory:
+```text
+cd intraday-tracker
+```
+3. Run the program:
+```text
+./mvnw compile exec:java
+```
 
 ## Assessment Criteria
 
