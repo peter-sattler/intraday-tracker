@@ -1,5 +1,5 @@
 # Intraday Stock Tracker
-<img src="/images/intraday-stock-tracker.png" alt="Funny Stock Chart" width="60%" height="60%">
+<img src="/images/intraday-stock-tracker.png" alt="Funny Stock Chart">
 
 ## Design Decisions:
 
