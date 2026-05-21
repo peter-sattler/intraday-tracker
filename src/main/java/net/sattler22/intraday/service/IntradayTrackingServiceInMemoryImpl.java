@@ -38,7 +38,7 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
     public Collection<Security> securities() {
         return securityDataMap.values().stream()
                 .sorted(Comparator.comparing(Security::symbol))
-                .toList();
+                .toList();  //Provides stable, sorted snapshot
     }
 
     @Override
