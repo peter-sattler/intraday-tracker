@@ -6,16 +6,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 
 /**
- * Intraday Tracking Service Interface
+ * Intraday Tracking Service
  *
  * @author Pete Sattler
- * @version October 2025
  * @since February 12, 2019
+ * @version May 2026
  */
 public sealed interface IntradayTrackingService permits IntradayTrackingServiceInMemoryImpl {
 
@@ -23,8 +21,6 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
      * Get an intraday security
      *
      * @param symbol The security's symbol (case-insensitive)
-     * @throws NullPointerException When the symbol is <code>NULL</code>
-     * @throws IllegalArgumentException When the symbol can not be found
      */
     Security security(String symbol);
 
@@ -41,9 +37,6 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
      * @param tradeDate The date the security was traded
      * @param symbol The security's symbol (case-insensitive)
      * @param price The current price
-     * @throws NullPointerException When the trade date is <code>NULL</code>
-     * @throws NullPointerException When the symbol is <code>NULL</code>
-     * @throws NullPointerException When the price is <code>NULL</code>
      */
     void book(LocalDate tradeDate, String symbol, BigDecimal price);
 
@@ -55,10 +48,10 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
 
         private final LocalDate tradeDate;
         private final String symbol;
-        private volatile BigDecimal lowPrice;
-        private volatile BigDecimal highPrice;
-        private volatile BigDecimal priceSum;
-        private final List<BigDecimal> prices = new LinkedList<>();
+        private BigDecimal lowPrice;
+        private BigDecimal highPrice;
+        private int priceCount;
+        private BigDecimal priceSum;
         private final Object lockObject = new Object();
 
         public Security(LocalDate tradeDate, String symbol, BigDecimal price) {
@@ -68,8 +61,20 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
             if (price.compareTo(BigDecimal.ZERO) <= 0)
                 throw new IllegalArgumentException("Price must be greater than zero");
             this.highPrice = price;
+            this.priceCount = 1;
             this.priceSum = price;
-            this.prices.add(price);
+        }
+
+        public Security(Security source) {
+            Objects.requireNonNull(source, "Source is required");
+            synchronized (source.lockObject) {
+                this.tradeDate = source.tradeDate;
+                this.symbol = source.symbol;
+                this.lowPrice = source.lowPrice;
+                this.highPrice = source.highPrice;
+                this.priceCount = source.priceCount;
+                this.priceSum = source.priceSum;
+            }
         }
 
         /**
@@ -78,9 +83,10 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * @return The date the security was traded on
          */
         public LocalDate tradeDate() {
-            return tradeDate;
+            synchronized (lockObject) {
+                return tradeDate;
+            }
         }
-
 
         /**
          * Get symbol
@@ -88,7 +94,9 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * @return The security's symbol in upper case
          */
         public String symbol() {
-            return symbol;
+            synchronized (lockObject) {
+                return symbol;
+            }
         }
 
         /**
@@ -97,7 +105,9 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * @return The low price of the day
          */
         public BigDecimal lowPrice() {
-            return lowPrice;
+            synchronized (lockObject) {
+                return lowPrice;
+            }
         }
 
         /**
@@ -106,20 +116,22 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * @return The high price of the day
          */
         public BigDecimal highPrice() {
-            return highPrice;
+            synchronized (lockObject) {
+                return highPrice;
+            }
         }
 
         /**
          * Calculate average price
          *
-         * @param roundingMode Indicates how the least significant digit is to be calculated. If <code>NULL</code>,
-         *                     then <code>RoundingMode.HALF_UP</code> will be used.
+         * @param roundingMode Indicates how the least significant digit is to be calculated. If {@code NULL}, then
+         *                     {@code RoundingMode.HALF_UP} will be used.
          */
         public BigDecimal calcAveragePrice(RoundingMode roundingMode) {
             if (roundingMode == null)
-                roundingMode = RoundingMode.HALF_UP;  //Per interface contract
+                roundingMode = RoundingMode.HALF_UP;
             synchronized (lockObject) {
-                return priceSum.divide(new BigDecimal(prices.size()), roundingMode);
+                return priceSum.divide(new BigDecimal(priceCount), 2, roundingMode);
             }
         }
 
@@ -127,8 +139,6 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * Update price
          *
          * @param price The current price
-         * @throws NullPointerException When the trade date is <code>NULL</code>
-         * @throws NullPointerException When the price is <code>NULL</code>
          */
         public void update(BigDecimal price) {
             Objects.requireNonNull(price, "Price is required");
@@ -137,8 +147,8 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
                     this.lowPrice = price;
                 if (price.compareTo(highPrice) > 0)
                     this.highPrice = price;
+                this.priceCount++;
                 this.priceSum = priceSum.add(price);
-                this.prices.add(price);
             }
         }
 
@@ -151,18 +161,15 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
         public boolean equals(Object other) {
             if (this == other)
                 return true;
-            if (other == null)
+            if (!(other instanceof Security that))
                 return false;
-            if (this.getClass() != other.getClass())
-                return false;
-            final Security that = (Security) other;
             return Objects.equals(this.tradeDate, that.tradeDate()) && Objects.equals(this.symbol, that.symbol());
         }
 
         @Override
         public String toString() {
-            return String.format("%s [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceSum=%s, prices=%s]",
-                    getClass().getSimpleName(), tradeDate, symbol, lowPrice, highPrice, priceSum, prices);
+            return String.format("%s [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceCount=%d, priceSum=%s]",
+                    getClass().getSimpleName(), tradeDate, symbol, lowPrice, highPrice, priceCount, priceSum);
         }
     }
 }

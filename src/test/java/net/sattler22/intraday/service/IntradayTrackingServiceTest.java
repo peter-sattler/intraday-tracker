@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Intraday Tracking Service Unit Tests
  *
  * @author Pete Sattler
- * @version October 2025
  * @since February 12, 2019
+ * @version October 2025
  */
 final class IntradayTrackingServiceTest {
 

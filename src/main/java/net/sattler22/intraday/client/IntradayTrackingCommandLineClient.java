@@ -13,11 +13,11 @@ import java.util.Scanner;
 import java.util.regex.Pattern;
 
 /**
- * Intraday Tracking Command Line Client
+ * Intraday Tracking Command-Line Client
  *
  * @author Pete Sattler
- * @version October 2025
  * @since February 12, 2019
+ * @version October 2025
  */
 public record IntradayTrackingCommandLineClient(IntradayTrackingService service) {
 
