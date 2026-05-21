@@ -5,12 +5,12 @@ package net.sattler22.intraday;
  *
  * @author Pete Sattler
  * @since February 6, 2019
- * @version October 2025
+ * @version May 2026
  */
 public final class TestStockTickers {
 
     /**
-     * Apple ("Tom Crook") stock ticker
+     * Apple stock ticker
      */
     public static final String APPLE = "APPL";
 

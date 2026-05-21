@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -24,6 +25,10 @@ public record IntradayTrackingCommandLineClient(IntradayTrackingService intraday
     private static final Pattern USER_PROMPT_PATTERN = Pattern.compile("\\s+");
     private static final String USER_PROMPT = "Enter {TRADE DATE (YYYY-MM-DD)} {SYMBOL} {PRICE} or quit to terminate";
     private static final String USER_TERMINATE = "quit";
+
+    public IntradayTrackingCommandLineClient {
+        Objects.requireNonNull(intradayTrackingService, "Intraday tracking service is required");
+    }
 
     private void book(LocalDate tradeDate, String symbol, BigDecimal price) {
         intradayTrackingService.book(tradeDate, symbol, price);
@@ -45,27 +50,28 @@ public record IntradayTrackingCommandLineClient(IntradayTrackingService intraday
         console.printf("Intraday Tracker Command-Line Client%n");
         console.printf("Rounding Mode: [%s]%n%n", ROUNDING_MODE.name());
         final IntradayTrackingService intradayTrackingService = new IntradayTrackingServiceInMemoryImpl();
-        final IntradayTrackingCommandLineClient client = new IntradayTrackingCommandLineClient(intradayTrackingService);
-        try {
-            while (true) {
-                console.printf("%s%n> ", USER_PROMPT);
-                final String input = console.readLine();
-                if (input == null || USER_TERMINATE.equalsIgnoreCase(input.strip())) {
-                    break;
-                }
+        final IntradayTrackingCommandLineClient commandLineClient =
+                new IntradayTrackingCommandLineClient(intradayTrackingService);
+        while (true) {
+            console.printf("%s%n> ", USER_PROMPT);
+            final String input = console.readLine();
+            if (input == null || USER_TERMINATE.equalsIgnoreCase(input.strip())) {
+                console.printf("Intraday Tracker Command-Line Client terminated%n");
+                break;
+            }
+            try {
                 final String[] splitInput = USER_PROMPT_PATTERN.split(input.strip());
                 if (splitInput.length == USER_PROMPT_NBR_FIELDS) {
                     final LocalDate tradeDate = LocalDate.parse(splitInput[0]);
                     final String symbol = splitInput[1];
                     final BigDecimal price = new BigDecimal(splitInput[2]);
-                    client.book(tradeDate, symbol, price);
-                    displayResults(console, client.securities());
+                    commandLineClient.book(tradeDate, symbol, price);
+                    displayResults(console, commandLineClient.securities());
                 }
             }
-            console.printf("Intraday Tracker Command-Line Client terminated%n");
-        }
-        catch (RuntimeException exception) {
-            exception.printStackTrace(System.err);
+            catch (RuntimeException exception) {
+                exception.printStackTrace(System.err);
+            }
         }
     }
 

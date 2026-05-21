@@ -16,41 +16,41 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author Pete Sattler
  * @since February 12, 2019
- * @version October 2025
+ * @version May 2026
  */
 final class SecurityTest {
 
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     @Test
-    void testConstructorFailsWhenTradeDateIsNull() {
+    void newInstance_whenTradeDateIsNull_thenThrowNullPointerException() {
         assertThrows(NullPointerException.class, () ->
                 new Security(null, TestStockTickers.APPLE, BigDecimal.ONE));
     }
 
     @Test
-    void testConstructorFailsWhenSymbolIsNull() {
+    void newInstance_whenSymbolIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
                 new Security(tradeDate, null, BigDecimal.ONE));
     }
 
     @Test
-    void testConstructorFailsWhenPriceIsNull() {
+    void newInstance_whenPriceIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
             new Security(tradeDate, TestStockTickers.APPLE, null));
     }
 
     @Test
-    void testConstructorFailsWhenPriceIsInvalid() {
+    void newInstance_whenPriceIsInvalid_thenThrowIllegalArgumentException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
             new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ZERO));
     }
 
     @Test
-    void testConstructorHappyPath() {
+    void newInstance_whenHappyPath_thenSuccessful() {
         final String expectedSymbol = TestStockTickers.APPLE;
         final BigDecimal expectedPrice = new BigDecimal("178.44");
         final Security security = new Security(LocalDate.now(), expectedSymbol, expectedPrice);
@@ -58,7 +58,7 @@ final class SecurityTest {
     }
 
     @Test
-    void testUpdateOnePriceHappyPath() {
+    void update_whenOnePrice_thenSuccessful() {
         final String expectedSymbol = TestStockTickers.FACEBOOK;
         final BigDecimal nbrPrices = new BigDecimal("2");
         final BigDecimal lowPrice = new BigDecimal("184.19");
@@ -70,7 +70,7 @@ final class SecurityTest {
     }
 
     @Test
-    void testUpdateTwoPricesHappyPath() {
+    void update_whenTwoPrices_thenSuccessful() {
         final String expectedSymbol = TestStockTickers.FACEBOOK;
         final BigDecimal nbrPrices = new BigDecimal("3");
         final BigDecimal initialPrice = new BigDecimal("184.19");

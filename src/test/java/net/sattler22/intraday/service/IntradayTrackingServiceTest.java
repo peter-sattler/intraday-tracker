@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author Pete Sattler
  * @since February 12, 2019
- * @version October 2025
+ * @version May 2026
  */
 final class IntradayTrackingServiceTest {
 
@@ -28,27 +28,27 @@ final class IntradayTrackingServiceTest {
     }
 
     @Test
-    void testGetSecurityFailsWhenSymbolIsNull() {
+    void security_whenSymbolIsNull_thenThrowNullPointerException() {
         assertThrows(NullPointerException.class, () ->
             intradayTrackingService.security(null));
     }
 
     @Test
-    void testGetSecurityFailsWhenSymbolIsNotFound() {
+    void security_whenSymbolIsNotFound_thenThrowIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> {
             intradayTrackingService.security(TestStockTickers.GOOGLE);  //They are searching for answers ;)
         });
     }
 
     @Test
-    void testBookTradeFailsWhenSymbolIsNull() {
+    void book_whenSymbolIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
             intradayTrackingService.book(tradeDate, null, BigDecimal.ONE));
     }
 
     @Test
-    void testBookTradeAndGetSymbolHappyPath() {
+    void book_withHappyPath1_thenSuccessful() {
         final String symbol = TestStockTickers.APPLE;
         final BigDecimal price = new BigDecimal("178.44");
         final Security expected = new Security(LocalDate.now(), symbol, price);
@@ -58,13 +58,13 @@ final class IntradayTrackingServiceTest {
     }
 
     @Test
-    void testBookTradeAndGetSecuritiesHappyPath1() {
+    void book_withHappyPath2_thenSuccessful() {
         intradayTrackingService.book(LocalDate.now(), TestStockTickers.APPLE, new BigDecimal("178.44"));
         assertEquals(1, intradayTrackingService.securities().size());
     }
 
     @Test
-    void testBookTradeAndGetSecuritiesHappyPath2() {
+    void book_withHappyPath3_thenSuccessful() {
         final LocalDate tradeDate = LocalDate.now();
         intradayTrackingService.book(tradeDate, TestStockTickers.APPLE, new BigDecimal("178.44"));
         intradayTrackingService.book(tradeDate, TestStockTickers.APPLE, new BigDecimal("163.84"));
@@ -72,7 +72,7 @@ final class IntradayTrackingServiceTest {
     }
 
     @Test
-    void testBookTradeAndGetSecuritiesMapHappyPath3() {
+    void book_withHappyPath4_thenSuccessful() {
         final LocalDate tradeDate = LocalDate.now();
         intradayTrackingService.book(tradeDate, TestStockTickers.APPLE, new BigDecimal("178.44"));
         intradayTrackingService.book(tradeDate.minusDays(1L), TestStockTickers.GOOGLE, new BigDecimal("1149.49"));

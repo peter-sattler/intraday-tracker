@@ -46,7 +46,6 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
     @ThreadSafe
     final class Security {
 
-        private static final int PRICE_SCALE = 2;
         private final LocalDate tradeDate;
         private final String symbol;
         private BigDecimal lowPrice;
@@ -76,7 +75,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
         /**
          * Copy constructs a new intraday security
          *
-         * @param source Tha security to copy from
+         * @param source The security to copy from
          */
         public Security(Security source) {
             Objects.requireNonNull(source, "Source is required");
@@ -140,7 +139,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
             if (roundingMode == null)
                 roundingMode = RoundingMode.HALF_UP;
             synchronized (lockObject) {
-                return priceSum.divide(new BigDecimal(priceCount), PRICE_SCALE, roundingMode);
+                return priceSum.divide(BigDecimal.valueOf(priceCount), roundingMode);
             }
         }
 
