@@ -17,13 +17,14 @@ import java.util.regex.Pattern;
  *
  * @author Pete Sattler
  * @since February 12, 2019
- * @version October 2025
+ * @version May 2026
  */
 public record IntradayTrackingCommandLineClient(IntradayTrackingService service) {
 
     private static final Logger logger = LoggerFactory.getLogger(IntradayTrackingCommandLineClient.class);
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
     private static final int USER_PROMPT_NBR_FIELDS = 3;
-    private static final Pattern USER_PROMPT_PATTERN = Pattern.compile(" \\s*");
+    private static final Pattern USER_PROMPT_PATTERN = Pattern.compile("\\s+");
     private static final String USER_PROMPT = "Enter {TRADE DATE (YYYY-MM-DD)} {SYMBOL} {PRICE} or quit to terminate";
     private static final String USER_TERMINATE = "quit";
 
@@ -42,35 +43,36 @@ public record IntradayTrackingCommandLineClient(IntradayTrackingService service)
         logger.info("Intraday Tracker Command-Line Client");
         final IntradayTrackingService service = new IntradayTrackingServiceInMemoryImpl();
         final IntradayTrackingCommandLineClient client = new IntradayTrackingCommandLineClient(service);
-        final RoundingMode roundingMode = RoundingMode.HALF_UP;
         if (logger.isInfoEnabled())
-            logger.info("Rounding Mode: [{}]", roundingMode.name());
+            logger.info("Rounding Mode: [{}]", ROUNDING_MODE.name());
         try (final Scanner scanner = new Scanner(System.in)) {
             while (true) {
                 logger.info(USER_PROMPT);
                 final String input = scanner.nextLine();
-                if (USER_TERMINATE.equalsIgnoreCase(input.strip()))
+                if (USER_TERMINATE.equalsIgnoreCase(input.strip())) {
                     break;
+                }
                 final String[] splitInput = USER_PROMPT_PATTERN.split(input);
                 if (splitInput.length == USER_PROMPT_NBR_FIELDS) {
                     final LocalDate tradeDate = LocalDate.parse(splitInput[0]);
                     final String symbol = splitInput[1];
                     final BigDecimal price = new BigDecimal(splitInput[2]);
                     client.book(tradeDate, symbol, price);
-                    displayResults(client.securities(), roundingMode);
+                    displayResults(client.securities(), ROUNDING_MODE);
                 }
             }
             logger.info("Intraday Tracker Command-Line Client terminated");
         }
-        catch(RuntimeException e) {
+        catch (RuntimeException e) {
             logger.error(e.getMessage(), e);
         }
     }
 
     private static void displayResults(Collection<IntradayTrackingService.Security> securities, RoundingMode roundingMode) {
         for (final IntradayTrackingService.Security security : securities)
-            if (logger.isInfoEnabled())
+            if (logger.isInfoEnabled()) {
                 logger.info("< {} {} {} {} {}",
                     security.tradeDate(), security.symbol(), security.highPrice(), security.lowPrice(), security.calcAveragePrice(roundingMode));
+            }
     }
 }

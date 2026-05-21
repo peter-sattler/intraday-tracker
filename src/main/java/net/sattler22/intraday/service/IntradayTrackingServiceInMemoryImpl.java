@@ -37,8 +37,9 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
     @Override
     public Collection<Security> securities() {
         return securityDataMap.values().stream()
+                .map(Security::new)
                 .sorted(Comparator.comparing(Security::symbol))
-                .toList();
+                .toList();  //Provides stable, sorted snapshot
     }
 
     @Override
@@ -53,7 +54,7 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
         securityDataMap.compute(normalizedSymbol, (key, currentSecurity) -> {
             //New trade date or symbol:
             if (currentSecurity == null || !currentSecurity.tradeDate().equals(tradeDate)) {
-                final Security newSecurity = new Security(tradeDate, symbol, price);
+                final Security newSecurity = new Security(tradeDate, normalizedSymbol, price);
                 logger.debug("{} {}", currentSecurity == null ? "Added" : "Replaced existing", newSecurity);
                 return newSecurity;
             }
@@ -66,6 +67,9 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
 
     private static String normalizeSymbol(String symbol) {
         Objects.requireNonNull(symbol, "Symbol is required");
-        return symbol.toUpperCase(Locale.ROOT);  //Locale neutral and deterministic
+        final String normalizedSymbol = symbol.strip().toUpperCase(Locale.ROOT);  //Locale neutral and deterministic
+        if (symbol.isEmpty())
+            throw new IllegalArgumentException("Symbol is required");
+        return normalizedSymbol;
     }
 }
