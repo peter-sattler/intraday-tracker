@@ -68,7 +68,7 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
     private static String normalizeSymbol(String symbol) {
         Objects.requireNonNull(symbol, "Symbol is required");
         final String normalizedSymbol = symbol.strip().toUpperCase(Locale.ROOT);  //Locale neutral and deterministic
-        if (symbol.isEmpty())
+        if (normalizedSymbol.isEmpty())
             throw new IllegalArgumentException("Symbol is required");
         return normalizedSymbol;
     }

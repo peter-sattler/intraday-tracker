@@ -20,7 +20,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
     /**
      * Get an intraday security
      *
-     * @param symbol The security's symbol (case-insensitive)
+     * @param symbol The security's symbol (case-insensitive). Only one date per security is retained.
      */
     Security security(String symbol);
 
@@ -34,7 +34,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
     /**
      * Book an intraday security
      *
-     * @param tradeDate The date the security was traded
+     * @param tradeDate The date the security was traded on
      * @param symbol The security's symbol (case-insensitive)
      * @param price The current price
      */
@@ -46,6 +46,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
     @ThreadSafe
     final class Security {
 
+        private static final int PRICE_SCALE = 2;
         private final LocalDate tradeDate;
         private final String symbol;
         private BigDecimal lowPrice;
@@ -54,6 +55,13 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
         private BigDecimal priceSum;
         private final Object lockObject = new Object();
 
+        /**
+         * Constructs a new intraday security
+         *
+         * @param tradeDate The date it was traded on
+         * @param symbol The symbol (case-insensitive)
+         * @param price The current price
+         */
         public Security(LocalDate tradeDate, String symbol, BigDecimal price) {
             this.tradeDate = Objects.requireNonNull(tradeDate, "Trade date is required");
             this.symbol = Objects.requireNonNull(symbol, "Symbol is required");
@@ -65,6 +73,11 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
             this.priceSum = price;
         }
 
+        /**
+         * Copy constructs a new intraday security
+         *
+         * @param source Tha security to copy from
+         */
         public Security(Security source) {
             Objects.requireNonNull(source, "Source is required");
             synchronized (source.lockObject) {
@@ -83,9 +96,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * @return The date the security was traded on
          */
         public LocalDate tradeDate() {
-            synchronized (lockObject) {
-                return tradeDate;
-            }
+            return tradeDate;
         }
 
         /**
@@ -94,9 +105,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          * @return The security's symbol in upper case
          */
         public String symbol() {
-            synchronized (lockObject) {
-                return symbol;
-            }
+            return symbol;
         }
 
         /**
@@ -131,17 +140,19 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
             if (roundingMode == null)
                 roundingMode = RoundingMode.HALF_UP;
             synchronized (lockObject) {
-                return priceSum.divide(new BigDecimal(priceCount), 2, roundingMode);
+                return priceSum.divide(new BigDecimal(priceCount), PRICE_SCALE, roundingMode);
             }
         }
 
         /**
-         * Update price
+         * Update the price
          *
-         * @param price The current price
+         * @param price The new price
          */
         public void update(BigDecimal price) {
             Objects.requireNonNull(price, "Price is required");
+            if (price.compareTo(BigDecimal.ZERO) <= 0)
+                throw new IllegalArgumentException("Price must be greater than zero");
             synchronized (lockObject) {
                 if (price.compareTo(lowPrice) < 0)
                     this.lowPrice = price;
@@ -168,8 +179,10 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
 
         @Override
         public String toString() {
-            return String.format("%s [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceCount=%d, priceSum=%s]",
-                    getClass().getSimpleName(), tradeDate, symbol, lowPrice, highPrice, priceCount, priceSum);
+            synchronized (lockObject) {
+                return "%s [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceCount=%d, priceSum=%s]"
+                        .formatted(getClass().getSimpleName(), tradeDate, symbol, lowPrice, highPrice, priceCount, priceSum);
+            }
         }
     }
 }
