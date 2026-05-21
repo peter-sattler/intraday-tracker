@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -36,7 +36,9 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
 
     @Override
     public Collection<Security> securities() {
-        return List.copyOf(securityDataMap.values());  //Provide stable snapshot
+        return securityDataMap.values().stream()
+                .sorted(Comparator.comparing(Security::symbol))
+                .toList();
     }
 
     @Override
