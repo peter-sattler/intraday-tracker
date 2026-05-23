@@ -1,6 +1,5 @@
 package net.sattler22.intraday.service;
 
-import net.sattler22.intraday.TestStockTickers;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -25,72 +24,78 @@ final class SecurityTest {
     @Test
     void newInstance_whenTradeDateIsNull_thenThrowNullPointerException() {
         assertThrows(NullPointerException.class, () ->
-                new Security(null, TestStockTickers.APPLE, BigDecimal.ONE));
+                new Security(null, TestStockTickers.APPLE, BigDecimal.ONE, BigDecimal.ONE, 1, BigDecimal.ONE));
     }
 
     @Test
     void newInstance_whenSymbolIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
-                new Security(tradeDate, null, BigDecimal.ONE));
+                new Security(tradeDate, null, BigDecimal.ONE, BigDecimal.ONE, 2, BigDecimal.ONE));
     }
 
     @Test
-    void newInstance_whenPriceIsNull_thenThrowNullPointerException() {
+    void newInstance_whenLowPriceIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
-            new Security(tradeDate, TestStockTickers.APPLE, null));
+            new Security(tradeDate, TestStockTickers.APPLE, null, BigDecimal.ONE, 3, BigDecimal.ONE));
     }
 
     @Test
-    void newInstance_whenPriceIsInvalid_thenThrowIllegalArgumentException() {
+    void newInstance_whenLowPriceIsZero_thenThrowIllegalArgumentException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
-            new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ZERO));
+            new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ZERO, BigDecimal.ONE, 4, BigDecimal.ONE));
+    }
+
+    @Test
+    void newInstance_whenHighPriceIsNull_thenThrowNullPointerException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(NullPointerException.class, () ->
+                new Security(tradeDate, TestStockTickers.APPLE, BigDecimal.ONE, null, 5, BigDecimal.ONE));
+    }
+
+    @Test
+    void newInstance_whenHighPriceIsZero_thenThrowIllegalArgumentException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(IllegalArgumentException.class, () ->
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ZERO, 6, BigDecimal.ONE));
+    }
+
+    @Test
+    void newInstance_whenPriceCountIsNegative_thenThrowIllegalArgumentException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(IllegalArgumentException.class, () ->
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, -1, BigDecimal.ONE));
+    }
+
+    @Test
+    void newInstance_whenPriceCountIsZero_thenThrowIllegalArgumentException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(IllegalArgumentException.class, () ->
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, 0, BigDecimal.ONE));
+    }
+
+    @Test
+    void newInstance_whenPriceSumIsNull_thenThrowIllegalArgumentException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(NullPointerException.class, () ->
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, 7, null));
     }
 
     @Test
     void newInstance_whenHappyPath_thenSuccessful() {
+        final LocalDate expectedTradeDate = LocalDate.now();
         final String expectedSymbol = TestStockTickers.APPLE;
         final BigDecimal expectedPrice = new BigDecimal("178.44");
-        final Security security = new Security(LocalDate.now(), expectedSymbol, expectedPrice);
-        assertImpl(security, expectedSymbol, expectedPrice, expectedPrice, expectedPrice);
-    }
-
-    @Test
-    void update_whenOnePrice_thenSuccessful() {
-        final String expectedSymbol = TestStockTickers.FACEBOOK;
-        final BigDecimal nbrPrices = new BigDecimal("2");
-        final BigDecimal lowPrice = new BigDecimal("184.19");
-        final BigDecimal highPrice = new BigDecimal("196.50");
-        final BigDecimal expectedAverage = lowPrice.add(highPrice).divide(nbrPrices, ROUNDING_MODE);
-        final Security security = new Security(LocalDate.now(), expectedSymbol, lowPrice);
-        security.update(highPrice);
-        assertImpl(security, expectedSymbol, lowPrice, highPrice, expectedAverage);
-    }
-
-    @Test
-    void update_whenTwoPrices_thenSuccessful() {
-        final String expectedSymbol = TestStockTickers.FACEBOOK;
-        final BigDecimal nbrPrices = new BigDecimal("3");
-        final BigDecimal initialPrice = new BigDecimal("184.19");
-        final BigDecimal highPrice = new BigDecimal("196.50");
-        final BigDecimal lowPrice = new BigDecimal("178.25");
-        final BigDecimal expectedAverage = (initialPrice.add(lowPrice).add(highPrice)).divide(nbrPrices, ROUNDING_MODE);
-        final Security security = new Security(LocalDate.now(), expectedSymbol, initialPrice);
-        security.update(highPrice);
-        security.update(lowPrice);
-        assertImpl(security, expectedSymbol, lowPrice, highPrice, expectedAverage);
-    }
-
-    /**
-     * Test standard assertions
-     */
-    private static void assertImpl(Security actual, String symbol, BigDecimal lowPrice,
-                                   BigDecimal highPrice, BigDecimal avgPrice) {
-        assertEquals(symbol, actual.symbol());
-        assertEquals(lowPrice, actual.lowPrice());
-        assertEquals(highPrice, actual.highPrice());
-        assertEquals(avgPrice, actual.calcAveragePrice(ROUNDING_MODE));
+        final int expectedPriceCount = 1;
+        final Security actual =
+                new Security(expectedTradeDate, expectedSymbol, expectedPrice, expectedPrice, expectedPriceCount, expectedPrice);
+        assertEquals(expectedSymbol, actual.symbol());
+        assertEquals(expectedPrice, actual.lowPrice());
+        assertEquals(expectedPrice, actual.highPrice());
+        assertEquals(expectedPriceCount, actual.priceCount());
+        assertEquals(expectedPrice, actual.priceSum());
+        assertEquals(expectedPrice, actual.calcAveragePrice(ROUNDING_MODE));
     }
 }

@@ -4,12 +4,9 @@ import net.sattler22.intraday.service.IntradayTrackingService;
 import net.sattler22.intraday.service.IntradayTrackingServiceInMemoryImpl;
 
 import java.io.Console;
-import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /**
  * Intraday Tracking Command-Line Client
@@ -21,8 +18,6 @@ import java.util.regex.Pattern;
 public record IntradayTrackingCommandLineClient(IntradayTrackingService intradayTrackingService) {
 
     private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
-    private static final int USER_PROMPT_NBR_FIELDS = 3;
-    private static final Pattern USER_PROMPT_PATTERN = Pattern.compile("\\s+");
     private static final String USER_PROMPT = "Enter {TRADE DATE (YYYY-MM-DD)} {SYMBOL} {PRICE} or quit to terminate";
     private static final String USER_TERMINATE = "quit";
 
@@ -30,8 +25,8 @@ public record IntradayTrackingCommandLineClient(IntradayTrackingService intraday
         Objects.requireNonNull(intradayTrackingService, "Intraday tracking service is required");
     }
 
-    private void book(LocalDate tradeDate, String symbol, BigDecimal price) {
-        intradayTrackingService.book(tradeDate, symbol, price);
+    private void book(IntradayTrackingClientParser.TradeData tradeData) {
+        intradayTrackingService.book(tradeData.tradeDate(), tradeData.symbol(), tradeData.price());
     }
 
     private Collection<IntradayTrackingService.Security> securities() {
@@ -47,30 +42,25 @@ public record IntradayTrackingCommandLineClient(IntradayTrackingService intraday
             System.err.println("Please run from a terminal/command prompt");
             return;
         }
-        console.printf("Intraday Tracker Command-Line Client%n");
-        console.printf("Rounding Mode: [%s]%n%n", ROUNDING_MODE.name());
+        console.printf("*** Intraday Tracker Command-Line Client (Rounding mode: [%s]) ***%n", ROUNDING_MODE.name());
         final IntradayTrackingService intradayTrackingService = new IntradayTrackingServiceInMemoryImpl();
-        final IntradayTrackingCommandLineClient commandLineClient =
+        final IntradayTrackingCommandLineClient intradayTrackingClient =
                 new IntradayTrackingCommandLineClient(intradayTrackingService);
         while (true) {
             console.printf("%s%n> ", USER_PROMPT);
-            final String input = console.readLine();
-            if (input == null || USER_TERMINATE.equalsIgnoreCase(input.strip())) {
+            final String userInput = console.readLine();
+            if (userInput == null || USER_TERMINATE.equalsIgnoreCase(userInput.strip())) {
                 console.printf("Intraday Tracker Command-Line Client terminated%n");
                 break;
             }
             try {
-                final String[] splitInput = USER_PROMPT_PATTERN.split(input.strip());
-                if (splitInput.length == USER_PROMPT_NBR_FIELDS) {
-                    final LocalDate tradeDate = LocalDate.parse(splitInput[0]);
-                    final String symbol = splitInput[1];
-                    final BigDecimal price = new BigDecimal(splitInput[2]);
-                    commandLineClient.book(tradeDate, symbol, price);
-                    displayResults(console, commandLineClient.securities());
-                }
+                IntradayTrackingClientParser.parse(userInput).ifPresent(tradeData -> {
+                    intradayTrackingClient.book(tradeData);
+                    displayResults(console, intradayTrackingClient.securities());
+                });
             }
-            catch (RuntimeException exception) {
-                exception.printStackTrace(System.err);
+            catch (RuntimeException runtimeException) {
+                runtimeException.printStackTrace(System.err);
             }
         }
     }

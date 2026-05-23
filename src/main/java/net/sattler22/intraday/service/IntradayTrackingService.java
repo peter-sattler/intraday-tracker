@@ -1,7 +1,5 @@
 package net.sattler22.intraday.service;
 
-import net.jcip.annotations.ThreadSafe;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -43,90 +41,22 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
     /**
      * Intraday Security
      */
-    @ThreadSafe
-    final class Security {
+    record Security(LocalDate tradeDate, String symbol, BigDecimal lowPrice, BigDecimal highPrice, int priceCount, BigDecimal priceSum) {
 
-        private final LocalDate tradeDate;
-        private final String symbol;
-        private BigDecimal lowPrice;
-        private BigDecimal highPrice;
-        private int priceCount;
-        private BigDecimal priceSum;
-        private final Object lockObject = new Object();
-
-        /**
-         * Constructs a new intraday security
-         *
-         * @param tradeDate The date it was traded on
-         * @param symbol The symbol (case-insensitive)
-         * @param price The current price
-         */
-        public Security(LocalDate tradeDate, String symbol, BigDecimal price) {
-            this.tradeDate = Objects.requireNonNull(tradeDate, "Trade date is required");
-            this.symbol = Objects.requireNonNull(symbol, "Symbol is required");
-            this.lowPrice = Objects.requireNonNull(price, "Price is required");
-            if (price.compareTo(BigDecimal.ZERO) <= 0)
-                throw new IllegalArgumentException("Price must be greater than zero");
-            this.highPrice = price;
-            this.priceCount = 1;
-            this.priceSum = price;
-        }
-
-        /**
-         * Copy constructs a new intraday security
-         *
-         * @param source The security to copy from
-         */
-        public Security(Security source) {
-            Objects.requireNonNull(source, "Source is required");
-            synchronized (source.lockObject) {
-                this.tradeDate = source.tradeDate;
-                this.symbol = source.symbol;
-                this.lowPrice = source.lowPrice;
-                this.highPrice = source.highPrice;
-                this.priceCount = source.priceCount;
-                this.priceSum = source.priceSum;
-            }
-        }
-
-        /**
-         * Get trade date
-         *
-         * @return The date the security was traded on
-         */
-        public LocalDate tradeDate() {
-            return tradeDate;
-        }
-
-        /**
-         * Get symbol
-         *
-         * @return The security's symbol in upper case
-         */
-        public String symbol() {
-            return symbol;
-        }
-
-        /**
-         * Get low price
-         *
-         * @return The low price of the day
-         */
-        public BigDecimal lowPrice() {
-            synchronized (lockObject) {
-                return lowPrice;
-            }
-        }
-
-        /**
-         * Get high price
-         *
-         * @return The high price of the day
-         */
-        public BigDecimal highPrice() {
-            synchronized (lockObject) {
-                return highPrice;
-            }
+        public Security {
+            Objects.requireNonNull(tradeDate, "Trade date is required");
+            Objects.requireNonNull(symbol, "Symbol is required");
+            if (symbol.isBlank())
+                throw new IllegalArgumentException("Symbol is required");
+            Objects.requireNonNull(lowPrice, "Low price is required");
+            if (lowPrice.signum() <= 0)
+                throw new IllegalArgumentException("Low price must be greater than zero");
+            Objects.requireNonNull(highPrice, "High price is required");
+            if (highPrice.signum() <= 0)
+                throw new IllegalArgumentException("High price must be greater than zero");
+            if (priceCount <= 0)
+                throw new IllegalArgumentException("Price count must be greater than zero");
+            Objects.requireNonNull(priceSum, "Price sum is required");
         }
 
         /**
@@ -136,52 +66,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
          *                     {@code RoundingMode.HALF_UP} will be used.
          */
         public BigDecimal calcAveragePrice(RoundingMode roundingMode) {
-            if (roundingMode == null)
-                roundingMode = RoundingMode.HALF_UP;
-            synchronized (lockObject) {
-                return priceSum.divide(BigDecimal.valueOf(priceCount), roundingMode);
-            }
-        }
-
-        /**
-         * Update the price
-         *
-         * @param price The new price
-         */
-        public void update(BigDecimal price) {
-            Objects.requireNonNull(price, "Price is required");
-            if (price.compareTo(BigDecimal.ZERO) <= 0)
-                throw new IllegalArgumentException("Price must be greater than zero");
-            synchronized (lockObject) {
-                if (price.compareTo(lowPrice) < 0)
-                    this.lowPrice = price;
-                if (price.compareTo(highPrice) > 0)
-                    this.highPrice = price;
-                this.priceCount++;
-                this.priceSum = priceSum.add(price);
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(tradeDate, symbol);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (this == other)
-                return true;
-            if (!(other instanceof Security that))
-                return false;
-            return Objects.equals(this.tradeDate, that.tradeDate()) && Objects.equals(this.symbol, that.symbol());
-        }
-
-        @Override
-        public String toString() {
-            synchronized (lockObject) {
-                return "%s [tradeDate=%s, symbol=%s, lowPrice=%s, highPrice=%s, priceCount=%d, priceSum=%s]"
-                        .formatted(getClass().getSimpleName(), tradeDate, symbol, lowPrice, highPrice, priceCount, priceSum);
-            }
+            return priceSum.divide(BigDecimal.valueOf(priceCount), roundingMode == null ? RoundingMode.HALF_UP : roundingMode);
         }
     }
 }

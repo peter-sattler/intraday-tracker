@@ -24,44 +24,42 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class IntradayTrackingServiceInMemoryImpl implements IntradayTrackingService {
 
     private static final Logger logger = LoggerFactory.getLogger(IntradayTrackingServiceInMemoryImpl.class);
-    private final Map<String, Security> securityDataMap = new ConcurrentHashMap<>();
+    private final Map<String, SecurityAccumulator> symbolAccumulatorMap = new ConcurrentHashMap<>();
 
     @Override
     public Security security(String symbol) {
-        final Security security = securityDataMap.get(normalizeSymbol(symbol));
-        if (security == null)
+        final SecurityAccumulator accumulator = symbolAccumulatorMap.get(normalizeSymbol(symbol));
+        if (accumulator == null)
             throw new IllegalArgumentException(String.format("Symbol [%s] not found", symbol));
-        return new Security(security);  //Provide stable snapshot
+        return accumulator.snapshot();  //Provide stable snapshot
     }
 
     @Override
     public Collection<Security> securities() {
-        return securityDataMap.values().stream()
-                .map(Security::new)
+        return symbolAccumulatorMap.values().stream()
+                .map(SecurityAccumulator::snapshot)
                 .sorted(Comparator.comparing(Security::symbol))
-                .toList();  //Provides stable, sorted snapshot
+                .toList();  //Provide stable, sorted snapshot
     }
 
     @Override
     public void book(LocalDate tradeDate, String symbol, BigDecimal price) {
         Objects.requireNonNull(tradeDate, "Trade date is required");
-        Objects.requireNonNull(price, "Price is required");
-        if (price.compareTo(BigDecimal.ZERO) <= 0)
-            throw new IllegalArgumentException("Price must be greater than zero");
+        validatePrice(price);
         //For the given symbol, either create, replace or update the existing price:
         //NOTE: Remapping function is guaranteed to execute atomically for each key!!!
         final String normalizedSymbol = normalizeSymbol(symbol);
-        securityDataMap.compute(normalizedSymbol, (key, currentSecurity) -> {
+        symbolAccumulatorMap.compute(normalizedSymbol, (key, currentAccumulator) -> {
             //New trade date or symbol:
-            if (currentSecurity == null || !currentSecurity.tradeDate().equals(tradeDate)) {
-                final Security newSecurity = new Security(tradeDate, normalizedSymbol, price);
-                logger.debug("{} {}", currentSecurity == null ? "Added" : "Replaced existing", newSecurity);
-                return newSecurity;
+            if (currentAccumulator == null || !currentAccumulator.tradeDate().equals(tradeDate)) {
+                final SecurityAccumulator newAccumulator = new SecurityAccumulator(tradeDate, normalizedSymbol, price);
+                logger.debug("{} {}", currentAccumulator == null ? "Added" : "Replaced existing", newAccumulator.snapshot());
+                return newAccumulator;
             }
             //Update existing (same trade date) with new price:
-            currentSecurity.update(price);
-            logger.debug("Updated existing {}", currentSecurity);
-            return currentSecurity;
+            currentAccumulator.update(price);
+            logger.debug("Updated existing {}", currentAccumulator.snapshot());
+            return currentAccumulator;
         });
     }
 
@@ -71,5 +69,49 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
         if (normalizedSymbol.isEmpty())
             throw new IllegalArgumentException("Symbol is required");
         return normalizedSymbol;
+    }
+
+    private static void validatePrice(BigDecimal price) {
+        Objects.requireNonNull(price, "Price is required");
+        if (price.signum() <= 0)
+            throw new IllegalArgumentException("Price must be greater than zero");
+    }
+
+    private static final class SecurityAccumulator {
+
+        private final LocalDate tradeDate;
+        private final String symbol;
+        private BigDecimal lowPrice;
+        private BigDecimal highPrice;
+        private int priceCount;
+        private BigDecimal priceSum;
+
+        private SecurityAccumulator(LocalDate tradeDate, String symbol, BigDecimal price) {
+            this.tradeDate = Objects.requireNonNull(tradeDate, "Trade date is required");
+            this.symbol = Objects.requireNonNull(symbol, "Symbol is required");
+            validatePrice(price);
+            this.lowPrice = price;
+            this.highPrice = price;
+            this.priceCount = 1;
+            this.priceSum = price;
+        }
+
+        private LocalDate tradeDate() {
+            return tradeDate;
+        }
+
+        private void update(BigDecimal price) {
+            validatePrice(price);
+            if (price.compareTo(lowPrice) < 0)
+                this.lowPrice = price;
+            if (price.compareTo(highPrice) > 0)
+                this.highPrice = price;
+            this.priceCount++;
+            this.priceSum = priceSum.add(price);
+        }
+
+        private Security snapshot() {
+            return new Security(tradeDate, symbol, lowPrice, highPrice, priceCount, priceSum);
+        }
     }
 }
