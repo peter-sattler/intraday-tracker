@@ -47,6 +47,13 @@ final class SecurityTest {
     }
 
     @Test
+    void newInstance_whenLowPriceExceedsHighPrice_thenThrowIllegalArgumentException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(IllegalArgumentException.class, () ->
+                new Security(tradeDate, TestStockTickers.INTL_BUSINESS_MACHINES, BigDecimal.TEN, BigDecimal.ONE, 1L, BigDecimal.ONE));
+    }
+
+    @Test
     void newInstance_whenHighPriceIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
@@ -61,24 +68,19 @@ final class SecurityTest {
     }
 
     @Test
-    void newInstance_whenLowPriceExceedsHighPrice_thenThrowIllegalArgumentException() {
-        final LocalDate tradeDate = LocalDate.now();
-        assertThrows(IllegalArgumentException.class, () ->
-                new Security(tradeDate, TestStockTickers.INTL_BUSINESS_MACHINES, BigDecimal.TEN, BigDecimal.ONE, 1L, BigDecimal.ONE));
-    }
-
-    @Test
     void newInstance_whenPriceCountIsNegative_thenThrowIllegalArgumentException() {
-        final LocalDate tradeDate = LocalDate.now();
-        assertThrows(IllegalArgumentException.class, () ->
-                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, -1L, BigDecimal.ONE));
+        testPriceCountThrowsIllegalArgumentException(-1L);
     }
 
     @Test
     void newInstance_whenPriceCountIsZero_thenThrowIllegalArgumentException() {
+        testPriceCountThrowsIllegalArgumentException(0L);
+    }
+
+    private void testPriceCountThrowsIllegalArgumentException(long priceCount) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
-                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, 0L, BigDecimal.ONE));
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, priceCount, BigDecimal.ONE));
     }
 
     @Test
