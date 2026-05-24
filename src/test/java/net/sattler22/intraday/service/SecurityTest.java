@@ -89,10 +89,19 @@ final class SecurityTest {
     }
 
     @Test
+    void newInstance_whenPriceSumIsNegative_thenThrowIllegalArgumentException() {
+        testPriceSumThrowsIllegalArgumentException(BigDecimal.valueOf(-1));
+    }
+
+    @Test
     void newInstance_whenPriceSumIsZero_thenThrowIllegalArgumentException() {
+        testPriceSumThrowsIllegalArgumentException(BigDecimal.ZERO);
+    }
+
+    private void testPriceSumThrowsIllegalArgumentException(BigDecimal priceSum) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
-                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, 1L, BigDecimal.ZERO));
+                new Security(tradeDate, TestStockTickers.JPMORGAN_CHASE, BigDecimal.ONE, BigDecimal.ONE, 1L, priceSum));
     }
 
     @Test
