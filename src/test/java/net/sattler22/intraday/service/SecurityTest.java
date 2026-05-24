@@ -19,8 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  */
 final class SecurityTest {
 
-    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
-
     @Test
     void newInstance_whenTradeDateIsNull_thenThrowNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -31,35 +29,42 @@ final class SecurityTest {
     void newInstance_whenSymbolIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
-                new Security(tradeDate, null, BigDecimal.ONE, BigDecimal.ONE, 2, BigDecimal.ONE));
+                new Security(tradeDate, null, BigDecimal.ONE, BigDecimal.ONE, 1, BigDecimal.ONE));
     }
 
     @Test
     void newInstance_whenLowPriceIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
-            new Security(tradeDate, TestStockTickers.APPLE, null, BigDecimal.ONE, 3, BigDecimal.ONE));
+            new Security(tradeDate, TestStockTickers.APPLE, null, BigDecimal.ONE, 1, BigDecimal.ONE));
     }
 
     @Test
     void newInstance_whenLowPriceIsZero_thenThrowIllegalArgumentException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
-            new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ZERO, BigDecimal.ONE, 4, BigDecimal.ONE));
+            new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ZERO, BigDecimal.ONE, 1, BigDecimal.ONE));
     }
 
     @Test
     void newInstance_whenHighPriceIsNull_thenThrowNullPointerException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
-                new Security(tradeDate, TestStockTickers.APPLE, BigDecimal.ONE, null, 5, BigDecimal.ONE));
+                new Security(tradeDate, TestStockTickers.APPLE, BigDecimal.ONE, null, 1, BigDecimal.ONE));
     }
 
     @Test
     void newInstance_whenHighPriceIsZero_thenThrowIllegalArgumentException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
-                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ZERO, 6, BigDecimal.ONE));
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ZERO, 1, BigDecimal.ONE));
+    }
+
+    @Test
+    void newInstance_whenLowPriceExceedsHighPrice_thenThrowIllegalArgumentException() {
+        final LocalDate tradeDate = LocalDate.now();
+        assertThrows(IllegalArgumentException.class, () ->
+                new Security(tradeDate, TestStockTickers.INTL_BUSINESS_MACHINES, BigDecimal.TEN, BigDecimal.ONE, 1, BigDecimal.ONE));
     }
 
     @Test
@@ -80,7 +85,7 @@ final class SecurityTest {
     void newInstance_whenPriceSumIsNull_thenThrowIllegalArgumentException() {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(NullPointerException.class, () ->
-                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, 7, null));
+                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, 1, null));
     }
 
     @Test
@@ -96,6 +101,6 @@ final class SecurityTest {
         assertEquals(expectedPrice, actual.highPrice());
         assertEquals(expectedPriceCount, actual.priceCount());
         assertEquals(expectedPrice, actual.priceSum());
-        assertEquals(expectedPrice, actual.calcAveragePrice(ROUNDING_MODE));
+        assertEquals(expectedPrice, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
     }
 }

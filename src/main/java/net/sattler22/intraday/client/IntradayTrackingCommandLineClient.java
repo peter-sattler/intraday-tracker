@@ -68,7 +68,7 @@ public record IntradayTrackingCommandLineClient(IntradayTrackingService intraday
     private static void displayResults(Console console, Collection<IntradayTrackingService.Security> securities) {
         for (final IntradayTrackingService.Security security : securities) {
             console.printf("< %s %s %s %s %s%n", security.tradeDate(), security.symbol(), security.highPrice(),
-                    security.lowPrice(), security.calcAveragePrice(ROUNDING_MODE));
+                    security.lowPrice(), security.calcAveragePrice(2, ROUNDING_MODE));
         }
     }
 }

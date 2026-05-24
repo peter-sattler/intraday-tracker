@@ -117,7 +117,7 @@ final class IntradayTrackingServiceInMemoryImplTest {
         intradayTrackingService.book(tradeDate, symbol, price);
         final Security actual = intradayTrackingService.security(TestStockTickers.APPLE);
         assertEquals(expected, actual);
-        assertEquals(price, actual.calcAveragePrice(RoundingMode.HALF_UP));
+        assertEquals(price, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -133,7 +133,7 @@ final class IntradayTrackingServiceInMemoryImplTest {
                 new Security(tradeDate, symbol, prices.getFirst(), prices.getLast(), prices.size(), priceSum);
         final Security actual = intradayTrackingService.security(TestStockTickers.APPLE);
         assertEquals(expected, actual);
-        assertEquals(expectedAverage, actual.calcAveragePrice(RoundingMode.HALF_UP));
+        assertEquals(expectedAverage, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
     }
 
     @Test

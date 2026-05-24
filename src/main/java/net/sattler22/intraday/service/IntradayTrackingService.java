@@ -3,7 +3,7 @@ package net.sattler22.intraday.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -25,9 +25,9 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
     /**
      * Get all intraday securities
      *
-     * @return A collection of all intraday securities
+     * @return An immutable list of all intraday securities sorted by symbol
      */
-    Collection<Security> securities();
+    List<Security> securities();
 
     /**
      * Book an intraday security
@@ -54,6 +54,8 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
             Objects.requireNonNull(highPrice, "High price is required");
             if (highPrice.signum() <= 0)
                 throw new IllegalArgumentException("High price must be greater than zero");
+            if (lowPrice.compareTo(highPrice) > 0)
+                throw new IllegalArgumentException("Low price cannot exceed high price");
             if (priceCount <= 0)
                 throw new IllegalArgumentException("Price count must be greater than zero");
             Objects.requireNonNull(priceSum, "Price sum is required");
@@ -62,11 +64,12 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
         /**
          * Calculate average price
          *
+         * @param scale The scale of the average price to be returned.
          * @param roundingMode Indicates how the least significant digit is to be calculated. If {@code NULL}, then
          *                     {@code RoundingMode.HALF_UP} will be used.
          */
-        public BigDecimal calcAveragePrice(RoundingMode roundingMode) {
-            return priceSum.divide(BigDecimal.valueOf(priceCount), roundingMode == null ? RoundingMode.HALF_UP : roundingMode);
+        public BigDecimal calcAveragePrice(int scale, RoundingMode roundingMode) {
+            return priceSum.divide(BigDecimal.valueOf(priceCount), scale, roundingMode == null ? RoundingMode.HALF_UP : roundingMode);
         }
     }
 }

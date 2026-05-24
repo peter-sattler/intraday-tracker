@@ -1,13 +1,14 @@
 package net.sattler22.intraday.service;
 
+import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -35,7 +36,7 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
     }
 
     @Override
-    public Collection<Security> securities() {
+    public List<Security> securities() {
         return symbolAccumulatorMap.values().stream()
                 .map(SecurityAccumulator::snapshot)
                 .sorted(Comparator.comparing(Security::symbol))
@@ -50,16 +51,18 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
         //NOTE: Remapping function is guaranteed to execute atomically for each key!!!
         final String normalizedSymbol = normalizeSymbol(symbol);
         symbolAccumulatorMap.compute(normalizedSymbol, (key, currentAccumulator) -> {
-            //New trade date or symbol:
+            //First price for symbol or replace prior trade date:
             if (currentAccumulator == null || !currentAccumulator.tradeDate().equals(tradeDate)) {
                 final SecurityAccumulator newAccumulator = new SecurityAccumulator(tradeDate, normalizedSymbol, price);
-                logger.debug("{} {}", currentAccumulator == null ? "Added" : "Replaced existing", newAccumulator.snapshot());
+                if (logger.isDebugEnabled())
+                    logger.debug("{} {}", currentAccumulator == null ? "Added" : "Replaced existing", newAccumulator.snapshot());
                 return newAccumulator;
             }
             //Update existing (same trade date) with new price:
-            currentAccumulator.update(price);
-            logger.debug("Updated existing {}", currentAccumulator.snapshot());
-            return currentAccumulator;
+            final SecurityAccumulator updatedAccumulator = currentAccumulator.withPrice(price);
+            if (logger.isDebugEnabled())
+                logger.debug("Updated existing {}", updatedAccumulator.snapshot());
+            return updatedAccumulator;
         });
     }
 
@@ -77,37 +80,39 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
             throw new IllegalArgumentException("Price must be greater than zero");
     }
 
+    @Immutable
     private static final class SecurityAccumulator {
 
         private final LocalDate tradeDate;
         private final String symbol;
-        private BigDecimal lowPrice;
-        private BigDecimal highPrice;
-        private int priceCount;
-        private BigDecimal priceSum;
+        private final BigDecimal lowPrice;
+        private final BigDecimal highPrice;
+        private final int priceCount;
+        private final BigDecimal priceSum;
 
         private SecurityAccumulator(LocalDate tradeDate, String symbol, BigDecimal price) {
-            this.tradeDate = Objects.requireNonNull(tradeDate, "Trade date is required");
-            this.symbol = Objects.requireNonNull(symbol, "Symbol is required");
+            this(Objects.requireNonNull(tradeDate, "Trade date is required"),
+                    Objects.requireNonNull(symbol, "Symbol is required"), price, price, 1, price);
             validatePrice(price);
-            this.lowPrice = price;
-            this.highPrice = price;
-            this.priceCount = 1;
-            this.priceSum = price;
+        }
+
+        private SecurityAccumulator(LocalDate tradeDate, String symbol, BigDecimal lowPrice, BigDecimal highPrice,
+                                    int priceCount, BigDecimal priceSum) {
+            this.tradeDate = tradeDate;
+            this.symbol = symbol;
+            this.lowPrice = lowPrice;
+            this.highPrice = highPrice;
+            this.priceCount = priceCount;
+            this.priceSum = priceSum;
         }
 
         private LocalDate tradeDate() {
             return tradeDate;
         }
 
-        private void update(BigDecimal price) {
+        private SecurityAccumulator withPrice(BigDecimal price) {
             validatePrice(price);
-            if (price.compareTo(lowPrice) < 0)
-                this.lowPrice = price;
-            if (price.compareTo(highPrice) > 0)
-                this.highPrice = price;
-            this.priceCount++;
-            this.priceSum = priceSum.add(price);
+            return new SecurityAccumulator(tradeDate, symbol, price.min(lowPrice), price.max(highPrice), priceCount + 1, priceSum.add(price));
         }
 
         private Security snapshot() {
