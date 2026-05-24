@@ -80,7 +80,7 @@ final class SecurityTest {
     private void testPriceCountThrowsIllegalArgumentException(long priceCount) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
-                new Security(tradeDate, TestStockTickers.GOOGLE, BigDecimal.ONE, BigDecimal.ONE, priceCount, BigDecimal.ONE));
+                new Security(tradeDate, TestStockTickers.AMERICAN_INTL_GROUP, BigDecimal.ONE, BigDecimal.ONE, priceCount, BigDecimal.ONE));
     }
 
     @Test
