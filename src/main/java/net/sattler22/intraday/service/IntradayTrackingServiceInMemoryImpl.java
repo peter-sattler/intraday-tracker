@@ -29,9 +29,10 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
 
     @Override
     public Security security(String symbol) {
-        final SecurityAccumulator accumulator = symbolAccumulatorMap.get(normalizeSymbol(symbol));
+        final String normalizedSymbol = normalizeSymbol(symbol);
+        final SecurityAccumulator accumulator = symbolAccumulatorMap.get(normalizedSymbol);
         if (accumulator == null)
-            throw new IllegalArgumentException(String.format("Symbol [%s] not found", symbol));
+            throw new IllegalArgumentException(String.format("Symbol [%s] not found", normalizedSymbol));
         return accumulator.snapshot();  //Provide stable snapshot
     }
 

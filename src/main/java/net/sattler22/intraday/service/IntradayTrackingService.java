@@ -63,7 +63,7 @@ public sealed interface IntradayTrackingService permits IntradayTrackingServiceI
             if (priceCount <= 0)
                 throw new IllegalArgumentException("Price count must be greater than zero");
             Objects.requireNonNull(priceSum, "Price sum is required");
-            if (priceSum.signum() == 0)
+            if (priceSum.signum() <= 0)
                 throw new IllegalArgumentException("Price sum must be greater than zero");
         }
 
