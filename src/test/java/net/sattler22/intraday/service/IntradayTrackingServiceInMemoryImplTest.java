@@ -52,7 +52,7 @@ final class IntradayTrackingServiceInMemoryImplTest {
         assertEquals(expectedSymbol, actual.symbol());
         assertEquals(expectedPrice, actual.lowPrice());
         assertEquals(expectedPrice, actual.highPrice());
-        assertEquals(1, actual.priceCount());
+        assertEquals(1L, actual.priceCount());
         assertEquals(expectedPrice, actual.priceSum());
     }
 
@@ -113,11 +113,11 @@ final class IntradayTrackingServiceInMemoryImplTest {
         final String symbol = TestStockTickers.APPLE;
         final LocalDate tradeDate = LocalDate.now();
         final BigDecimal price = new BigDecimal("178.44");
-        final Security expected = new Security(tradeDate, symbol, price, price, 1, price);
+        final Security expected = new Security(tradeDate, symbol, price, price, 1L, price);
         intradayTrackingService.book(tradeDate, symbol, price);
         final Security actual = intradayTrackingService.security(TestStockTickers.APPLE);
         assertEquals(expected, actual);
-        assertEquals(price, actual.calcAveragePrice(RoundingMode.HALF_UP));
+        assertEquals(price, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -133,7 +133,7 @@ final class IntradayTrackingServiceInMemoryImplTest {
                 new Security(tradeDate, symbol, prices.getFirst(), prices.getLast(), prices.size(), priceSum);
         final Security actual = intradayTrackingService.security(TestStockTickers.APPLE);
         assertEquals(expected, actual);
-        assertEquals(expectedAverage, actual.calcAveragePrice(RoundingMode.HALF_UP));
+        assertEquals(expectedAverage, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
     }
 
     @Test
