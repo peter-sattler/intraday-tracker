@@ -42,7 +42,7 @@ public final class IntradayTrackingCommandLineClient {
             try {
                 IntradayTrackingClientParser.parse(userInput).ifPresent(tradeData -> {
                     intradayTrackingService.book(tradeData.tradeDate(), tradeData.symbol(), tradeData.price());
-                    intradayTrackingService.securities().forEach(security ->
+                    intradayTrackingService.list().forEach(security ->
                         console.printf("< %s %s %s %s %s%n", security.tradeDate(), security.symbol(), security.highPrice(),
                                 security.lowPrice(), security.calcAveragePrice(2, RoundingMode.HALF_UP)));
                 });

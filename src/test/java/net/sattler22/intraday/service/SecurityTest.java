@@ -69,15 +69,15 @@ final class SecurityTest {
 
     @Test
     void newInstance_whenPriceCountIsNegative_thenThrowIllegalArgumentException() {
-        testPriceCountThrowsIllegalArgumentException(-1L);
+        newInstancePriceCountThrowsIllegalArgumentException(-1L);
     }
 
     @Test
     void newInstance_whenPriceCountIsZero_thenThrowIllegalArgumentException() {
-        testPriceCountThrowsIllegalArgumentException(0L);
+        newInstancePriceCountThrowsIllegalArgumentException(0L);
     }
 
-    private void testPriceCountThrowsIllegalArgumentException(long priceCount) {
+    private void newInstancePriceCountThrowsIllegalArgumentException(long priceCount) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
                 new Security(tradeDate, TestStockTickers.AMERICAN_INTL_GROUP, BigDecimal.ONE, BigDecimal.ONE, priceCount, BigDecimal.ONE));
@@ -92,15 +92,15 @@ final class SecurityTest {
 
     @Test
     void newInstance_whenPriceSumIsNegative_thenThrowIllegalArgumentException() {
-        testPriceSumThrowsIllegalArgumentException(BigDecimal.valueOf(-1));
+        newInstancePriceSumThrowsIllegalArgumentException(BigDecimal.valueOf(-1));
     }
 
     @Test
     void newInstance_whenPriceSumIsZero_thenThrowIllegalArgumentException() {
-        testPriceSumThrowsIllegalArgumentException(BigDecimal.ZERO);
+        newInstancePriceSumThrowsIllegalArgumentException(BigDecimal.ZERO);
     }
 
-    private void testPriceSumThrowsIllegalArgumentException(BigDecimal priceSum) {
+    private void newInstancePriceSumThrowsIllegalArgumentException(BigDecimal priceSum) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
                 new Security(tradeDate, TestStockTickers.JPMORGAN_CHASE, BigDecimal.ONE, BigDecimal.ONE, 1L, priceSum));

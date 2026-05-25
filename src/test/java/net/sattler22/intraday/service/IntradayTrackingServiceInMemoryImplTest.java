@@ -7,10 +7,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static net.sattler22.intraday.service.IntradayTrackingService.Security;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Intraday Tracking Service In Memory Unit Tests
@@ -29,31 +31,67 @@ final class IntradayTrackingServiceInMemoryImplTest {
     }
 
     @Test
-    void security_whenSymbolIsNull_thenThrowNullPointerException() {
+    void find_whenSymbolIsNull_thenThrowNullPointerException() {
         assertThrows(NullPointerException.class, () ->
-            intradayTrackingService.security(null));
+            intradayTrackingService.find(null));
     }
 
     @Test
-    void security_whenSymbolIsNotFound_thenThrowIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            intradayTrackingService.security(TestStockTickers.GOOGLE);  //They are searching for answers ;)
-        });
+    void find_whenSymbolIsBlank_thenThrowIllegalArgumentException() {
+        findSymbolThrowsIllegalArgumentException(" ".repeat(8));
     }
 
     @Test
-    void security_whenHappyPath_thenSuccessful() {
+    void find_whenSymbolIsEmpty_thenThrowIllegalArgumentException() {
+        findSymbolThrowsIllegalArgumentException("");
+    }
+
+    private void findSymbolThrowsIllegalArgumentException(String symbol) {
+        assertThrows(IllegalArgumentException.class, () ->
+                intradayTrackingService.find(symbol));
+    }
+
+    @Test
+    void find_whenSymbolIsNotFound_thenReturnEmptyOptional() {
+        assertTrue(intradayTrackingService.find(TestStockTickers.JPMORGAN_CHASE).isEmpty());
+    }
+
+    @Test
+    void find_whenSymbolFound_thenSuccessful() {
         final LocalDate expectedTradeDate = LocalDate.now();
         final String expectedSymbol = TestStockTickers.FACEBOOK;
         final BigDecimal expectedPrice = BigDecimal.TEN;
         intradayTrackingService.book(expectedTradeDate, expectedSymbol, expectedPrice);
-        final Security actual = intradayTrackingService.security(expectedSymbol);
+        final Security actual = intradayTrackingService.find(expectedSymbol)
+                .orElseThrow(() -> new NoSuchElementException("Symbol %s not found".formatted(expectedSymbol)));
         assertEquals(expectedTradeDate, actual.tradeDate());
         assertEquals(expectedSymbol, actual.symbol());
         assertEquals(expectedPrice, actual.lowPrice());
         assertEquals(expectedPrice, actual.highPrice());
         assertEquals(1L, actual.priceCount());
         assertEquals(expectedPrice, actual.priceSum());
+    }
+
+    @Test
+    void list_withOneSecurityOnePrice_thenSuccessful() {
+        intradayTrackingService.book(LocalDate.now(), TestStockTickers.INTL_BUSINESS_MACHINES, new BigDecimal("100.00"));
+        assertEquals(1, intradayTrackingService.list().size());
+    }
+
+    @Test
+    void list_withOneSecurityTwoPricesSameTradeDate_thenSuccessful() {
+        final LocalDate tradeDate = LocalDate.now();
+        intradayTrackingService.book(tradeDate, TestStockTickers.GOOGLE, new BigDecimal("1149.49"));
+        intradayTrackingService.book(tradeDate, TestStockTickers.GOOGLE, new BigDecimal("1148.10"));
+        assertEquals(1, intradayTrackingService.list().size());
+    }
+
+    @Test
+    void list_withTwoSecuritiesDifferentTradeDates_thenSuccessful() {
+        final LocalDate tradeDate = LocalDate.now();
+        intradayTrackingService.book(tradeDate.minusDays(1L), TestStockTickers.GOOGLE, new BigDecimal("1149.49"));
+        intradayTrackingService.book(tradeDate, TestStockTickers.FACEBOOK, new BigDecimal("184.19"));
+        assertEquals(2, intradayTrackingService.list().size());
     }
 
     @Test
@@ -70,16 +108,16 @@ final class IntradayTrackingServiceInMemoryImplTest {
     }
 
     @Test
-    void book_whenSymbolIsEmpty_thenThrowIllegalArgumentException() {
-        testSymbolThrowsIllegalArgumentException("");
+    void book_whenSymbolIsBlank_thenThrowIllegalArgumentException() {
+        bookSymbolThrowsIllegalArgumentException(" ".repeat(8));
     }
 
     @Test
-    void book_whenSymbolIsBlank_thenThrowIllegalArgumentException() {
-        testSymbolThrowsIllegalArgumentException(" ".repeat(8));
+    void book_whenSymbolIsEmpty_thenThrowIllegalArgumentException() {
+        bookSymbolThrowsIllegalArgumentException("");
     }
 
-    private void testSymbolThrowsIllegalArgumentException(String symbol) {
+    private void bookSymbolThrowsIllegalArgumentException(String symbol) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
                 intradayTrackingService.book(tradeDate, symbol, BigDecimal.TWO));
@@ -94,15 +132,15 @@ final class IntradayTrackingServiceInMemoryImplTest {
 
     @Test
     void book_whenPriceIsNegative_thenThrowIllegalArgumentException() {
-        testPriceThrowsIllegalArgumentException(BigDecimal.valueOf(-1));
+        bookPriceThrowsIllegalArgumentException(BigDecimal.valueOf(-1));
     }
 
     @Test
     void book_whenPriceIsZero_thenThrowIllegalArgumentException() {
-        testPriceThrowsIllegalArgumentException(BigDecimal.ZERO);
+        bookPriceThrowsIllegalArgumentException(BigDecimal.ZERO);
     }
 
-    private void testPriceThrowsIllegalArgumentException(BigDecimal price) {
+    private void bookPriceThrowsIllegalArgumentException(BigDecimal price) {
         final LocalDate tradeDate = LocalDate.now();
         assertThrows(IllegalArgumentException.class, () ->
                 intradayTrackingService.book(tradeDate, TestStockTickers.AMERICAN_INTL_GROUP, price));
@@ -115,7 +153,8 @@ final class IntradayTrackingServiceInMemoryImplTest {
         final BigDecimal price = new BigDecimal("178.44");
         final Security expected = new Security(tradeDate, symbol, price, price, 1L, price);
         intradayTrackingService.book(tradeDate, symbol, price);
-        final Security actual = intradayTrackingService.security(TestStockTickers.APPLE);
+        final Security actual = intradayTrackingService.find(TestStockTickers.APPLE)
+                .orElseThrow(() -> new NoSuchElementException("Symbol %s not found".formatted(symbol)));
         assertEquals(expected, actual);
         assertEquals(price, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
     }
@@ -131,30 +170,9 @@ final class IntradayTrackingServiceInMemoryImplTest {
         intradayTrackingService.book(tradeDate, symbol, prices.getLast());
         final Security expected =
                 new Security(tradeDate, symbol, prices.getFirst(), prices.getLast(), prices.size(), priceSum);
-        final Security actual = intradayTrackingService.security(TestStockTickers.APPLE);
+        final Security actual = intradayTrackingService.find(TestStockTickers.APPLE)
+                .orElseThrow(() -> new NoSuchElementException("Symbol %s not found".formatted(symbol)));
         assertEquals(expected, actual);
         assertEquals(expectedAverage, actual.calcAveragePrice(2, RoundingMode.HALF_UP));
-    }
-
-    @Test
-    void securities_withOneSecurityOnePrice_thenSuccessful() {
-        intradayTrackingService.book(LocalDate.now(), TestStockTickers.GOOGLE, new BigDecimal("1149.49"));
-        assertEquals(1, intradayTrackingService.securities().size());
-    }
-
-    @Test
-    void securities_withOneSecurityTwoPricesSameTradeDate_thenSuccessful() {
-        final LocalDate tradeDate = LocalDate.now();
-        intradayTrackingService.book(tradeDate, TestStockTickers.GOOGLE, new BigDecimal("1149.49"));
-        intradayTrackingService.book(tradeDate, TestStockTickers.GOOGLE, new BigDecimal("1148.10"));
-        assertEquals(1, intradayTrackingService.securities().size());
-    }
-
-    @Test
-    void securities_withTwoSecuritiesDifferentTradeDates_thenSuccessful() {
-        final LocalDate tradeDate = LocalDate.now();
-        intradayTrackingService.book(tradeDate.minusDays(1L), TestStockTickers.GOOGLE, new BigDecimal("1149.49"));
-        intradayTrackingService.book(tradeDate, TestStockTickers.FACEBOOK, new BigDecimal("184.19"));
-        assertEquals(2, intradayTrackingService.securities().size());
     }
 }

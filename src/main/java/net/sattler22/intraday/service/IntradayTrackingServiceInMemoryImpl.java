@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,20 +29,20 @@ public final class IntradayTrackingServiceInMemoryImpl implements IntradayTracki
     private final Map<String, SecurityAccumulator> symbolAccumulatorMap = new ConcurrentHashMap<>();
 
     @Override
-    public Security security(String symbol) {
+    public Optional<Security> find(String symbol) {
         final String normalizedSymbol = normalizeSymbol(symbol);
         final SecurityAccumulator accumulator = symbolAccumulatorMap.get(normalizedSymbol);
         if (accumulator == null)
-            throw new IllegalArgumentException(String.format("Symbol [%s] not found", normalizedSymbol));
-        return accumulator.snapshot();  //Provide stable snapshot
+            return Optional.empty();
+        return Optional.of(accumulator.snapshot());
     }
 
     @Override
-    public List<Security> securities() {
+    public List<Security> list() {
         return symbolAccumulatorMap.values().stream()
                 .map(SecurityAccumulator::snapshot)
                 .sorted(Comparator.comparing(Security::symbol))
-                .toList();  //Provide stable, sorted snapshot
+                .toList();
     }
 
     @Override

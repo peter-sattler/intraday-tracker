@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Intraday Tracking Service
@@ -17,18 +18,19 @@ import java.util.Objects;
 public sealed interface IntradayTrackingService permits IntradayTrackingServiceInMemoryImpl {
 
     /**
-     * Get an intraday security
+     * Find an intraday security
      *
-     * @param symbol The security's symbol (case-insensitive).
+     * @param symbol The security's symbol (case-insensitive)
+     * @return An optional stable snapshot of the intraday security
      */
-    Security security(String symbol);
+    Optional<Security> find(String symbol);
 
     /**
      * Get all intraday securities
      *
-     * @return An immutable list of all intraday securities sorted by symbol
+     * @return An immutable list of zero or more intraday securities sorted by symbol
      */
-    List<Security> securities();
+    List<Security> list();
 
     /**
      * Book an intraday security
